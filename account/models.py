@@ -9,6 +9,6 @@ class User(BaseModel):
     first_name = sqlite.CharField(max_length=100)
     last_name = sqlite.CharField(max_length=100)
     email = sqlite.EmailField(max_length=200)
-    image = sqlite.CharField(max_length=500)
+    image = sqlite.CharField(max_length=500, null=True)
     is_superuser = sqlite.BooleanField(default=False)
     
