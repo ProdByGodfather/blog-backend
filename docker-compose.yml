@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  blog:
+    build: .
+    container_name: abarword_blog
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+      - ./:/app
+    environment:
+      - PYTHONUNBUFFERED=1
