@@ -1,14 +1,9 @@
 from config.settings import app
 
-# from coffee.views import router as CoffeeRouter
-# from token_config.urls import router as TokenRouter
 from account.route import router as UserRouter
 from auth.route import router as AuthRouter
-# from cart.views import router as CartRouter
+from post.route import router as PostRouter
 
-
-# app.include_router(TokenRouter)
 app.include_router(UserRouter, prefix="/account", tags=['Account'])
 app.include_router(AuthRouter, prefix="/auth", tags=['Auth'])
-# app.include_router(CoffeeRouter, prefix="/coffees", tags=['Coffee'])
-# app.include_router(CartRouter, prefix="/cart", tags=['cart'])
+app.include_router(PostRouter, prefix="/post", tags=['Post'])
