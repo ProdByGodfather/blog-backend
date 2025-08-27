@@ -43,5 +43,6 @@ def create_default_user():
                     password = hash_password(os.getenv("PASSWORD")),
                     first_name = "Admin",
                     last_name = "admin",
+                    email = "admin@abarword.com",
                     is_superuser = True)
     return
