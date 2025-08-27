@@ -35,6 +35,17 @@ def category_create(request: Request, title: str = Form(...)):
         raise HTTPException(status_code=400, detail="Category creation failed")
     return {"id": category.id, "title": category.title}
 
+@router.delete('/category/delete/{id}')
+def category_delete(request: Request, id : int):
+    user_id = get_user_from_request(request)
+    user = User.filter(id = user_id).first()
+    if not user or user.is_superuser == False:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Just Admins can create category")
+    
+    deleted = Category.delete(id = id)
+    
+    if deleted:
+        return {"message": "deleted"}
 
 @router.get("/post-list/")
 def post_list(page: int = 1, page_size: int = 10, filters: PostListFilter = Depends() ):
@@ -66,6 +77,7 @@ def post_detail(id):
     if not post:
         raise HTTPException(status_code=404, detail="no post found")
     return post
+
 
 @router.post("/create/", response_model=PostResponseSchema)
 async def post_create(request: Request, 
