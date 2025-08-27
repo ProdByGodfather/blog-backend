@@ -8,15 +8,16 @@ from post.schemas import PostListFilter, PostResponseSchema
 from account.models import User
 from auth.session import get_user_from_request
 from config.settings import UPLOAD_DIR
+from extensions.file_uploader import save_upload_file
 
 router = APIRouter()
 
 
-@router.get("category/list/")
+@router.get("/category/list/")
 def category_list():
     return Category.all().to_dict()
 
-@router.post("category/create/")
+@router.post("/category/create/")
 def category_create(request: Request, title: str = Form(...)):
     user_id = get_user_from_request(request)
     user = User.filter(id = user_id).first()
@@ -35,7 +36,7 @@ def category_create(request: Request, title: str = Form(...)):
     return {"id": category.id, "title": category.title}
 
 
-@router.get("post-list/")
+@router.get("/post-list/")
 def post_list(page: int = 1, page_size: int = 10, filters: PostListFilter = Depends() ):
     filter_kwargs = {}
     if filters.category_id is not None:
@@ -59,6 +60,12 @@ def post_list(page: int = 1, page_size: int = 10, filters: PostListFilter = Depe
     
     return paginated_result
 
+@router.get('/detail/{id}')
+def post_detail(id):
+    post = Post.filter(id = id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="no post found")
+    return post
 
 @router.post("/create/", response_model=PostResponseSchema)
 async def post_create(request: Request, 
@@ -118,3 +125,54 @@ async def post_create(request: Request,
         author=user.username,
         create_time=str(post.create_time)
     )
+
+@router.delete('/delete/{id}')
+def post_delete(request: Request, id: int):
+    user_id = get_user_from_request(request)
+    user = User.filter(id=user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+
+    post = Post.filter(id=id, author=user_id).first()
+    if not post:
+        raise HTTPException(status_code=403, detail="You don't have delete permission.")
+
+    Post.delete(id=post.id)  
+    
+    return {'detail': 'successful.'}
+
+
+@router.put('/update/{id}')
+def post_update(request: Request, id: int,
+    title: str = Form(...),
+    description: str = Form(...),
+    category_id: Optional[int] = Form(None),
+    image: Optional[UploadFile] = File(None)):
+    """
+    - بروز رسانی پست
+    - کاربر باید لاگین کرده باشد (Session)
+    """
+    user_id = get_user_from_request(request)
+    user = User.filter(id = user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+    
+    post = Post.filter(id=id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    
+    if post.author != user.id and not user.is_staff:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to update this post")
+
+    post.title = title
+    post.description = description
+    if category_id:
+        post.category = category_id
+    
+    if image:
+        post.image = save_upload_file(image)
+
+    post.save()
+
+    return {"status": "success", "message": "Post updated successfully", "post_id": post.id}
+
