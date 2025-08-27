@@ -5,13 +5,13 @@ from starlette.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-# from config.events import lifespan
+from config.event import lifespan
 
 load_dotenv()
 
 
 # Application 
-app = FastAPI(title="AbarWord")
+app = FastAPI(title="AbarWord", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
